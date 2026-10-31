@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coffer: Home</title>
+<link rel="stylesheet" href="coffer.css">
+</head>
+<body>
+<nav class="nav" aria-label="Main">
+  <span class="brand">Coffer</span>
+  <a href="home.html" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg><span>Home</span></a>
+  <a href="month.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M8 13h.01" /><path d="M12 13h.01" /><path d="M16 13h.01" /><path d="M8 17h.01" /><path d="M12 17h.01" /><path d="M16 17h.01" /></svg><span>Month</span></a>
+  <a href="transactions.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v16" /><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z" /></svg><span>Ledger</span></a>
+  <a href="import.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m17 8-5-5-5 5" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></svg><span>Import</span></a>
+  <a href="settings.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg><span>Settings</span></a>
+</nav>
+
+<main class="page">
+  <div class="banner" role="status">
+    <span class="msg"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg><span><b>Overdue.</b> Last import was 36 days ago (Sep 25), so October is missing.</span></span>
+    <a href="import.html">Import a file</a>
+  </div>
+
+  <div class="head">
+    <a class="go" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>Aug</a>
+    <h1>September 2026</h1>
+    <a class="go off" href="#">Oct<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg></a>
+  </div>
+
+  <section class="sec" aria-labelledby="sum-h">
+    <h2 id="sum-h">The month</h2>
+    <dl class="sum" style="margin-top:12px">
+      <div><dt>In</dt><dd>$4,820.00</dd></div>
+      <div><dt>Out</dt><dd>&minus;$3,412.86</dd></div>
+      <div class="total"><dt>Net</dt><dd>+$1,407.14</dd></div>
+    </dl>
+    <p class="sum-note"><span>Transfers between your accounts are left out</span><span class="amt">$650.00</span></p>
+  </section>
+
+  <div class="cols" style="margin-top:36px">
+    <section class="sec" aria-labelledby="where-h">
+      <h2 id="where-h">Where it went <span>out, by merchant</span></h2>
+      <ul class="rows">
+        <li class="row"><span class="name">Oakwood Apartments</span><span class="amt">$1,450.00</span><span class="sub">1 payment</span><span class="bar"><i style="width:100%"></i></span></li>
+        <li class="row"><span class="name">Publix</span><span class="amt">$340.18</span><span class="sub">9 purchases</span><span class="bar"><i style="width:23.5%"></i></span></li>
+        <li class="row"><span class="name">Amazon</span><span class="amt">$142.67</span><span class="sub">6 purchases</span><span class="bar"><i style="width:9.8%"></i></span></li>
+        <li class="row"><span class="name">Georgia Power</span><span class="amt">$118.40</span><span class="sub">1 payment</span><span class="bar"><i style="width:8.2%"></i></span></li>
+        <li class="row"><span class="name">Shell</span><span class="amt">$96.12</span><span class="sub">4 purchases</span><span class="bar"><i style="width:6.6%"></i></span></li>
+        <li class="row"><span class="name">Chipotle</span><span class="amt">$74.30</span><span class="sub">5 purchases</span><span class="bar"><i style="width:5.1%"></i></span></li>
+        <li class="row"><span class="name">Netflix</span><span class="amt">$15.49</span><span class="sub">1 payment</span></li>
+        <li class="row"><span class="name">Spotify</span><span class="amt">$11.99</span><span class="sub">1 payment</span></li>
+        <li class="row quiet"><span class="name">Everything else</span><span class="amt">$1,163.71</span><span class="sub">38 transactions, 22 merchants</span></li>
+      </ul>
+      <a class="more" href="month.html">Compare with August, every merchant</a>
+    </section>
+
+    <section class="sec" aria-labelledby="acct-h">
+      <h2 id="acct-h">By account <span>out</span></h2>
+      <ul class="rows">
+        <li class="row"><span class="name">deltacu-checking</span><span class="amt">$2,208.75</span><span class="sub">Delta Community. In $4,820.00</span></li>
+        <li class="row"><span class="name">capone-credit</span><span class="amt">$1,204.11</span><span class="sub">Capital One. In $0.00</span></li>
+      </ul>
+      <p class="faint small" style="margin-top:14px">Last file for both accounts: Sep 25.</p>
+    </section>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coffer: Import</title>
+<link rel="stylesheet" href="coffer.css">
+<style>
+  .import-grid .rail { margin-bottom: 8px; }
+  .proof { display: flex; gap: 10px; align-items: flex-start; }
+  .proof .ic { margin-top: 2px; color: var(--fall); }
+  .proof dl { margin: 8px 0 0; font-size: var(--t-sm); }
+  .proof dl > div { display: flex; justify-content: space-between; padding: 2px 0; }
+  .proof dt { color: var(--ink-2); } .proof dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .proof .eq { border-top: 1px solid var(--rule-strong); margin-top: 4px; padding-top: 4px; font-weight: 600; }
+  @media (min-width: 900px) {
+    .import-grid .rail { grid-column: 2; grid-row: 1; position: sticky; top: 24px; margin: 0; }
+    .import-grid .body { grid-column: 1; grid-row: 1; }
+    .import-grid .counts { grid-template-columns: repeat(2, 1fr); }
+    .import-grid .counts > div:nth-child(even) { border-left: 1px solid var(--rule); padding-left: 16px; }
+    .import-grid .counts > div { border-bottom: 1px solid var(--rule); padding-right: 0; }
+  }
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Main">
+  <span class="brand">Coffer</span>
+  <a href="home.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg><span>Home</span></a>
+  <a href="month.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M8 13h.01" /><path d="M12 13h.01" /><path d="M16 13h.01" /><path d="M8 17h.01" /><path d="M12 17h.01" /><path d="M16 17h.01" /></svg><span>Month</span></a>
+  <a href="transactions.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v16" /><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z" /></svg><span>Ledger</span></a>
+  <a href="import.html" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m17 8-5-5-5 5" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></svg><span>Import</span></a>
+  <a href="settings.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg><span>Settings</span></a>
+</nav>
+
+<main class="page">
+  <div class="head"><h1 class="title-left">Import</h1></div>
+
+  <ol class="steps" aria-label="Progress">
+    <li class="done">Choose file</li>
+    <li class="on" aria-current="step">Check</li>
+    <li>Done</li>
+  </ol>
+
+  <div class="import-grid">
+    <div class="rail stack">
+      <section>
+        <dl class="kv" style="grid-template-columns:6rem minmax(0,1fr)">
+          <dt>File</dt><dd class="mono">capone-statement-2026-10.pdf</dd>
+          <dt>Read as</dt><dd>Capital One credit card statement</dd>
+          <dt>Period</dt><dd>Sep 27 to Oct 26, 2026</dd>
+        </dl>
+      </section>
+      <label class="f">Which account is this?
+        <select class="field">
+          <option>capone-credit</option>
+          <option>deltacu-checking</option>
+          <option>deltacu-savings</option>
+        </select>
+      </label>
+      <p class="faint small" style="margin-top:6px">Chosen from the last four digits printed on the statement.</p>
+
+      <div class="proof" role="status">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="m16 9-5.5 5.5L8 12" /></svg>
+        <div style="flex:1">
+          <strong>Matches the statement, to the cent</strong>
+          <dl>
+            <div><dt>Previous balance</dt><dd>$1,310.00</dd></div>
+            <div><dt>58 purchases</dt><dd>+$1,204.11</dd></div>
+            <div><dt>1 payment</dt><dd>&minus;$650.00</dd></div>
+            <div class="eq"><dt>New balance, as printed</dt><dd>$1,864.11</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="counts">
+        <div><div class="n">59</div><div class="l">rows to add</div></div>
+        <div><div class="n">0</div><div class="l">already known</div></div>
+      </div>
+    </div>
+
+    <div class="body">
+      <p class="tint-note" style="margin-top:0"><b>Check the direction.</b> The row <span class="mono">CHIPOTLE 2210, $12.40</span> was read as <b>&minus;$12.40</b>, money out, because it sits under Transactions. Payments and credits are read as money in.</p>
+      <p class="tint-transfer small" style="margin-top:0">1 row looks like a transfer: <span class="mono">PAYMENT THANK YOU</span>, +$650.00. You can mark it after importing.</p>
+
+      <section class="sec" aria-labelledby="rows-h" style="margin-top:32px">
+        <h2 id="rows-h">First rows <span>6 of 59</span></h2>
+        <ul class="rows">
+          <li class="row"><span class="name">Publix</span><span class="amt">&minus;$61.22</span><span class="sub">Sep 29 &middot; PUBLIX #1043 ATLANTA GA</span></li>
+          <li class="row"><span class="name">Chipotle</span><span class="amt">&minus;$12.40</span><span class="sub">Sep 30 &middot; CHIPOTLE 2210</span></li>
+          <li class="row"><span class="name">Blue Door Coffee</span><span class="amt">&minus;$4.75</span><span class="sub">Oct 02 &middot; SQ *BLUE DOOR COFFEE</span></li>
+          <li class="row"><span class="name">Blue Door Coffee</span><span class="amt">&minus;$4.75</span><span class="sub">Oct 02 &middot; second identical row, kept</span></li>
+          <li class="row"><span class="name">Amazon</span><span class="amt">&minus;$23.18</span><span class="sub">Oct 04 &middot; AMZN Mktp US*2K4</span></li>
+          <li class="row"><span class="name">Payment, thank you</span><span class="amt fall">+$650.00</span><span class="sub">Oct 09 &middot; PAYMENT THANK YOU</span></li>
+        </ul>
+        <a class="more" href="#">Show all 59 rows</a>
+      </section>
+
+      <p class="faint small" style="margin-top:28px">If a statement does not add up, Coffer refuses it and names the row where it first disagrees. It never imports half a statement.</p>
+    </div>
+  </div>
+
+  <div class="confirm">
+    <div class="actions">
+      <a class="btn primary" href="#">Import 59 rows</a>
+      <a class="btn" href="#">Cancel</a>
+    </div>
+    <p>Nothing is saved until you confirm. You can undo an import later from Settings.</p>
+  </div>
+</main>
+</body>
+</html>

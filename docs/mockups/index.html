@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coffer: Mockups</title>
+<link rel="stylesheet" href="coffer.css">
+<style>
+  /* One screen at a time, chosen with radio buttons (no script). Nothing scrolls sideways. */
+  body { padding-bottom: 32px; }
+  .shell { max-width: 72rem; margin: 0 auto; padding: 24px 20px; }
+  .shell h1 { font: 600 var(--t-xl)/1.15 var(--serif); margin: 0 0 6px; }
+  .shell > p { margin: 0 0 20px; max-width: 65ch; color: var(--ink-2); }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px 28px; align-items: center; margin-bottom: 20px; }
+  .group { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .group input { position: absolute; opacity: 0; pointer-events: none; }
+  .group label { min-height: 40px; display: inline-flex; align-items: center; padding: 0 16px; font-size: var(--t-sm); color: var(--ink-2); cursor: pointer; transition: background 150ms var(--ease); }
+  .group label:hover { background: var(--paper-2); }
+  .group input:checked + label { background: var(--ink); color: var(--paper); }
+  .group input:focus-visible + label { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .stage { display: flex; justify-content: center; }
+  iframe { display: none; width: 390px; max-width: 100%; height: 78vh; min-height: 560px; border: 1px solid var(--rule); border-radius: 22px; background: var(--paper); }
+  .shell:has(#d-laptop:checked) iframe { width: 100%; border-radius: 12px; }
+  .shell:has(#s-home:checked) .f-home,
+  .shell:has(#s-month:checked) .f-month,
+  .shell:has(#s-ledger:checked) .f-ledger,
+  .shell:has(#s-import:checked) .f-import,
+  .shell:has(#s-settings:checked) .f-settings { display: block; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <h1>Coffer mockups</h1>
+  <p>Fictional September 2026 data. Pick a screen and a device; light or dark follows your system. The laptop view switches layout at 900px.</p>
+
+  <div class="controls">
+    <div class="group" role="radiogroup" aria-label="Screen">
+      <input type="radio" name="s" id="s-home" checked><label for="s-home">Home</label>
+      <input type="radio" name="s" id="s-month"><label for="s-month">Month</label>
+      <input type="radio" name="s" id="s-ledger"><label for="s-ledger">Ledger</label>
+      <input type="radio" name="s" id="s-import"><label for="s-import">Import</label>
+      <input type="radio" name="s" id="s-settings"><label for="s-settings">Settings</label>
+    </div>
+    <div class="group" role="radiogroup" aria-label="Device">
+      <input type="radio" name="d" id="d-phone" checked><label for="d-phone">Phone</label>
+      <input type="radio" name="d" id="d-laptop"><label for="d-laptop">Laptop</label>
+    </div>
+  </div>
+
+  <div class="stage">
+    <iframe class="f-home" src="home.html" title="Home"></iframe>
+    <iframe class="f-month" src="month.html" title="Month"></iframe>
+    <iframe class="f-ledger" src="transactions.html" title="Ledger"></iframe>
+    <iframe class="f-import" src="import.html" title="Import"></iframe>
+    <iframe class="f-settings" src="settings.html" title="Settings"></iframe>
+  </div>
+</div>
+</body>
+</html>

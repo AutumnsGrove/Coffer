@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coffer: Settings</title>
+<link rel="stylesheet" href="coffer.css">
+</head>
+<body>
+<nav class="nav" aria-label="Main">
+  <span class="brand">Coffer</span>
+  <a href="home.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" /><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg><span>Home</span></a>
+  <a href="month.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2v3" /><path d="M16 2v3" /><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M3 9h18" /><path d="M8 13h.01" /><path d="M12 13h.01" /><path d="M16 13h.01" /><path d="M8 17h.01" /><path d="M12 17h.01" /><path d="M16 17h.01" /></svg><span>Month</span></a>
+  <a href="transactions.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v16" /><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z" /></svg><span>Ledger</span></a>
+  <a href="import.html"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12" /><path d="m17 8-5-5-5 5" /><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /></svg><span>Import</span></a>
+  <a href="settings.html" aria-current="page"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /><circle cx="12" cy="12" r="3" /></svg><span>Settings</span></a>
+</nav>
+
+<main class="page">
+  <div class="head"><h1 class="title-left">Settings</h1></div>
+
+  <div class="cols even">
+    <div>
+      <section class="sec" aria-labelledby="acc-h">
+        <h2 id="acc-h">Accounts</h2>
+        <ul class="rows">
+          <li class="row"><span class="name mono">deltacu-checking</span><span class="amt small faint">Sep 25</span><span class="sub">Delta Community, checking</span></li>
+          <li class="row"><span class="name mono">deltacu-savings</span><span class="amt small faint">Sep 25</span><span class="sub">Delta Community, savings</span></li>
+          <li class="row"><span class="name mono">capone-credit</span><span class="amt small faint">Sep 25</span><span class="sub">Capital One, credit card</span></li>
+        </ul>
+        <p class="faint small" style="margin-top:12px">The right column is the last import. A key goes into every row's fingerprint, so it is fixed once created.</p>
+      </section>
+
+      <section class="sec" aria-labelledby="rem-h">
+        <h2 id="rem-h">Reminder</h2>
+        <label class="f" style="margin-top:14px">Call an import overdue after
+          <select class="field"><option>35 days</option><option>30 days</option><option>45 days</option></select>
+        </label>
+        <p class="faint small" style="margin-top:8px">Home shows the amber banner once the newest import is older than this.</p>
+      </section>
+
+      <section class="sec" aria-labelledby="map-h">
+        <h2 id="map-h">Column mappings</h2>
+        <ul class="rows">
+          <li class="row"><span class="name">Capital One credit card</span><span class="amt small faint">built in</span></li>
+          <li class="row"><span class="name">Delta Community checking and savings</span><span class="amt small faint">built in</span></li>
+          <li class="row"><span class="name">Example Bank</span><span class="amt small faint">mappings.json</span></li>
+        </ul>
+      </section>
+    </div>
+
+    <div>
+      <section class="sec" aria-labelledby="hist-h">
+        <h2 id="hist-h">Import history</h2>
+        <ul class="rows">
+          <li class="row"><span class="name mono">capone-2026-09.csv</span><span class="amt"><a class="btn sm danger" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" /></svg>Undo</a></span><span class="sub">Aug 20 to Sep 24 &middot; 52 new, 9 known</span></li>
+          <li class="row"><span class="name mono">deltacu-checking-2026-09.csv</span><span class="amt"><a class="btn sm danger" href="#"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5" /><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11" /></svg>Undo</a></span><span class="sub">Aug 22 to Sep 24 &middot; 38 new, 6 known</span></li>
+          <li class="row quiet"><span class="name mono">capone-2026-09-wrong.csv</span><span class="amt small">undone Sep 25</span><span class="sub">0 rows remain</span></li>
+        </ul>
+        <p class="faint small" style="margin-top:12px">Undo removes every row a file added, in one step, so a corrected file can be imported. Notes and merchant names on those rows go with them.</p>
+      </section>
+
+      <section class="sec" aria-labelledby="bak-h">
+        <h2 id="bak-h">Backups</h2>
+        <dl class="kv" style="margin-top:14px">
+          <dt>Snapshot</dt><dd>Today 03:00, 412 KB</dd>
+          <dt>Mirror</dt><dd>Today 03:04, encrypted</dd>
+          <dt>Kept here</dt><dd>30 days</dd>
+        </dl>
+        <div class="actions" style="margin-top:16px"><a class="btn" href="#">Export CSV</a><a class="btn" href="#">Export JSON</a></div>
+      </section>
+
+      <section class="sec" aria-labelledby="abt-h">
+        <h2 id="abt-h">About</h2>
+        <dl class="kv" style="margin-top:14px">
+          <dt>Version</dt><dd class="mono">r142.7024ab0</dd>
+          <dt>Database</dt><dd>OK, 1,843 transactions</dd>
+        </dl>
+        <div class="actions" style="margin-top:16px"><a class="btn" href="#">Check for update</a></div>
+      </section>
+    </div>
+  </div>
+</main>
+</body>
+</html>
