@@ -87,7 +87,7 @@ tolerates a month of lag — which is the cadence I actually want anyway.
 | Statement checks | A PDF import must **prove itself** before the preview is offered: Delta rows are checked against the printed running balance, Capital One rows against the printed totals. A statement that does not reconcile is refused, naming the row where it diverges |
 | Balances | Stored per account from each statement (opening, closing, as-of date), shown on Home labelled with the statement date, never typed in by hand |
 | Statement dedupe | A statement is identified by (account, period) as well as by file hash, so a re-downloaded copy of the same month is caught even though its bytes differ. Row fingerprints still back it up |
-| One file, many accounts | A Delta statement holds savings and checking together. The import step maps each section to an account, so one file can write to several |
+| One file, many accounts | A Delta statement holds savings and checking together. Each account stores a `statement_ref` (the ID or last four digits the bank prints), so import maps every section to its account automatically, writes to several accounts from one file, and **asks rather than guesses** when it meets a reference it does not know |
 | Data source (later) | OFX / Teller / Plaid sit behind the same `Source` interface — siblings, never rewrites |
 | Import shape | Two-step: upload → **preview** (new / duplicate / range / totals) → confirm. Nothing is written before the confirm |
 | Dedupe | Deterministic fingerprint: `sha256(account_key, posted, amount_minor, description_raw (whitespace-collapsed only), occurrence)`, `UNIQUE` in the database. Hashes the bank's text, **not** the normalised form, so improving the normaliser can never change a fingerprint and re-import duplicates. Idempotency is a required property, not a nice-to-have |
@@ -208,6 +208,7 @@ question 12).
 
 - **The `Source` interface is the load-bearing abstraction** (~15 lines). A source yields normalised
   transactions; the importer, dedupe, database and UI never learn which one produced them.
+- **The server tells browsers to stay home.** Every response carries `Content-Security-Policy: default-src 'self'`, so even a bug cannot make the page load an outside font, script or image. A Go test asserts the header.
 - **Nothing is fetched.** Every byte in this app arrives because I uploaded a file or typed a value.
   The only outbound traffic the container causes is the R2 mirror (host-side) — and none at all from
   the container itself if the mirror stays in the host watcher.
@@ -240,6 +241,7 @@ accounts (
   name TEXT NOT NULL,                 -- what I call it
   type TEXT NOT NULL,                 -- checking | savings | credit | loan | cash
   currency TEXT NOT NULL DEFAULT 'USD',
+  statement_ref TEXT,                 -- what the bank prints to identify it: Delta "0010", Capital One "1968"
   backlog_from DATE,                  -- earliest date CSV history will cover
   created_at, archived_at
 )
@@ -304,6 +306,8 @@ Fingerprint:
 ```
 fingerprint = sha256(account_key | posted | amount_minor | description_raw_collapsed | occurrence)
 ```
+
+The `|` is notation only. The implementation encodes each field with a length prefix, so a `|` or any other character inside a description cannot forge a collision with another row (covered by `FuzzFingerprint`, see DEVELOPMENT.md).
 
 `description_raw_collapsed` is the bank's text with runs of whitespace collapsed and nothing else done
 to it. Normalisation rules (prefix stripping, store numbers) are free to evolve because they never
@@ -407,6 +411,8 @@ model provider, and reaches R2 only as a plain mirror into your own private buck
 
 Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
 
+Each phase is executed test-first, in Docker, in the slices laid out in [`DEVELOPMENT.md`](DEVELOPMENT.md), which also defines what "done" means for a slice.
+
 ### Phase 0: Look at real files (blocking, no code)
 
 - **[HUMAN]** answer open questions 1, 2, 12 and 13, and hand over the extra statements from question 2.
@@ -498,6 +504,7 @@ same interface. Plaid stays a design possibility, not a plan.
 - One phase at a time; read the matching section first; commit and push per phase.
 - **Stop and ask at every [HUMAN] item** — especially Phase 0's real files.
 - Keep scope tight: no new dependency, provider or service without asking.
+- **Test first, always, in Docker** (see `DEVELOPMENT.md`): a failing test before any code, happy, sad and bad paths listed before a slice starts, fuzz targets for every parser.
 - Small readable functions; the importer and money parsing are pure and tested hard, because they are
   where silent corruption lives.
 - No telemetry, no third-party scripts, fonts or icons.

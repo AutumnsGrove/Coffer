@@ -41,6 +41,7 @@ confirmed.
 ## Read this first
 
 - [`PLAN.md`](PLAN.md) — the build plan: stack, data model, import design, phases, decisions
+- [`DEVELOPMENT.md`](DEVELOPMENT.md) — how it gets built: test-first, Docker, fuzzing, the slices in order
 - `PLAN.md` §3 — **open questions**, including the one that blocks everything: real CSV files from both
   institutions
 
