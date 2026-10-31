@@ -28,7 +28,30 @@
           <li class="row"><span class="name mono">deltacu-savings</span><span class="amt small faint">Sep 25</span><span class="sub">Delta Community, savings</span></li>
           <li class="row"><span class="name mono">capone-credit</span><span class="amt small faint">Sep 25</span><span class="sub">Capital One, credit card</span></li>
         </ul>
-        <p class="faint small" style="margin-top:12px">The right column is the last import. A key goes into every row's fingerprint, so it is fixed once created.</p>
+        <p class="faint small" style="margin-top:12px">The right column is the last import. Accounts are archived, never deleted.</p>
+
+        <details class="add" open>
+          <summary class="btn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>Add an account</summary>
+          <div class="stack" style="margin-top:16px">
+            <label class="f">Name
+              <input class="field" value="Delta Community Roth IRA">
+            </label>
+            <label class="f">Key
+              <input class="field mono" value="deltacu-roth">
+            </label>
+            <p class="faint small" style="margin-top:6px">Lowercase letters, numbers and hyphens. The key goes into every row's fingerprint, so it cannot be changed later. The name can.</p>
+            <label class="f">Institution
+              <select class="field"><option>Delta Community</option><option>Capital One</option><option>Another bank (needs a new reader)</option></select>
+            </label>
+            <label class="f">Type
+              <select class="field"><option>Savings</option><option>Checking</option><option>Credit card</option><option>Loan</option><option>Cash</option></select>
+            </label>
+            <label class="f">Statement layout
+              <select class="field"><option>Delta Community statement</option></select>
+            </label>
+            <div class="actions"><a class="btn primary" href="#">Add account</a><a class="btn" href="#">Cancel</a></div>
+          </div>
+        </details>
       </section>
 
       <section class="sec" aria-labelledby="rem-h">
@@ -64,7 +87,7 @@
         <h2 id="bak-h">Backups</h2>
         <dl class="kv" style="margin-top:14px">
           <dt>Snapshot</dt><dd>Today 03:00, 412 KB</dd>
-          <dt>Mirror</dt><dd>Today 03:04, encrypted</dd>
+          <dt>Mirror</dt><dd>Today 03:04, private bucket</dd>
           <dt>Kept here</dt><dd>30 days</dd>
         </dl>
         <div class="actions" style="margin-top:16px"><a class="btn" href="#">Export CSV</a><a class="btn" href="#">Export JSON</a></div>

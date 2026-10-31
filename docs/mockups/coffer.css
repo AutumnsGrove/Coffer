@@ -12,6 +12,29 @@
   src: url("fonts/lexend-latin-wght-normal.woff2") format("woff2");
 }
 
+/* IBM Plex Mono for amounts, bundled (SIL Open Font License, see fonts/IBMPlexMono-OFL.txt). */
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("fonts/ibm-plex-mono-latin-600-normal.woff2") format("woff2");
+}
+
 :root {
   /* Paper and ink, all tinted toward a warm hue (about 80) */
   --paper: oklch(96.5% 0.012 85);
@@ -43,11 +66,9 @@
 
   --sans: "Lexend", system-ui, sans-serif;
   --serif: "Lexend", system-ui, sans-serif;   /* titles are Lexend too; only the name is kept */
-  /* Lexend has no tabular figures (digit widths vary, no tnum feature), so money columns would not
-     line up. Amounts use a system face that has them. To use Lexend there as well, set this to
-     var(--sans) and accept ragged digits. */
-  --figures: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  /* Amounts use IBM Plex Mono (monospaced, so every column of money aligns). Lexend has no tabular figures. */
+  --figures: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
   --tap: 44px;
   --ease: cubic-bezier(.25, 1, .5, 1);   /* ease-out-quart */
@@ -88,7 +109,7 @@ a { color: inherit; }
 
 /* Figures */
 .amt { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; text-align: right; white-space: nowrap; }
-.amt, .sum dd, .counts .n, .proof dd { font-family: var(--figures); font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.amt, .sum dd, .counts .n, .proof dd { font-family: var(--figures); letter-spacing: -.01em; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 .rise { color: var(--rise); }
 .fall { color: var(--fall); }
 .muted { color: var(--ink-2); }
@@ -258,6 +279,12 @@ label.f > .field { margin-top: 6px; }
 .cmp .chg { grid-column: 2; font-size: var(--t-sm); }
 .cmp-head { display: none; }
 .cmp.total { border-bottom: 0; border-top: 1px solid var(--rule-strong); font-weight: 600; margin-top: 4px; }
+
+/* Inline expanding form (Settings > Add an account); no modal */
+details.add { margin-top: 20px; }
+details.add > summary { list-style: none; cursor: pointer; width: fit-content; }
+details.add > summary::-webkit-details-marker { display: none; }
+details.add[open] > summary { margin-bottom: 0; }
 
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .stack > * + * { margin-top: 16px; }
