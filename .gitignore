@@ -1,0 +1,33 @@
+# Runtime state (on the potato, in the install folder)
+/data/
+/update-signal/
+/.env
+/.update-watcher.lock
+
+# Financial data. Never commit any of this.
+*.db
+*.db-wal
+*.db-shm
+*.csv
+!/testdata/**/*.csv
+!/docs/**/*.csv
+/exports/
+/local-data/
+
+# Go
+/bin/
+*.test
+*.out
+
+# Web (SvelteKit + pnpm)
+node_modules/
+/web/build/
+/web/.svelte-kit/
+/web/.vite/
+!/web/build/.gitkeep
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
