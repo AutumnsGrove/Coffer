@@ -11,6 +11,10 @@
 *.csv
 !/testdata/**/*.csv
 !/docs/**/*.csv
+# Bank statements carry a name, an address and account numbers. Never commit a real one;
+# parser fixtures are synthetic text files, not statements.
+*.pdf
+/statements/
 /exports/
 /local-data/
 

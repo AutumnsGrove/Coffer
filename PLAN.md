@@ -31,8 +31,8 @@ changes, in the same commit as the change. Anything still unknown belongs in
 
 ## 1. What it is
 
-Once a month — not daily, deliberately — I download a CSV of transactions from each of my two banks
-and drop it into Coffer. Coffer:
+Once a month — not daily, deliberately — I download each of my two banks' monthly **statement** (a PDF
+today; a CSV wherever one is available) and drop it into Coffer. Coffer:
 
 1. **identifies the file's shape** from a per-institution column mapping (a config entry, never
    branching code), including which column is the amount, which date format it uses, and whether
@@ -82,16 +82,24 @@ tolerates a month of lag — which is the cadence I actually want anyway.
 | Topic | Decision |
 |---|---|
 | Name | **Coffer** — decided 2026-10-31 |
-| Data source (v1) | **CSV only.** Manual, monthly, per-institution export |
+| Data source (v1) | **Monthly statement PDFs.** Manual, per-institution. Confirmed 2026-10-31: neither Capital One (new account) nor Delta Community offers a CSV or QFX download to this account, so PDF is the only way in, not a fallback. CSV stays a sibling `Source` for a future bank that has one |
+| PDF reading | **Built into the Go server**, as a `Source` sibling to CSV: text layer → rows, never OCR, nothing sent anywhere. The PDF library is **not chosen yet**; it is the Phase 0 spike and needs approval before it enters `go.mod` |
+| Statement checks | A PDF import must **prove itself** before the preview is offered: Delta rows are checked against the printed running balance, Capital One rows against the printed totals. A statement that does not reconcile is refused, naming the row where it diverges |
+| Statement dedupe | A statement is identified by (account, period) as well as by file hash, so a re-downloaded copy of the same month is caught even though its bytes differ. Row fingerprints still back it up |
+| One file, many accounts | A Delta statement holds savings and checking together. The import step maps each section to an account, so one file can write to several |
 | Data source (later) | OFX / Teller / Plaid sit behind the same `Source` interface — siblings, never rewrites |
 | Import shape | Two-step: upload → **preview** (new / duplicate / range / totals) → confirm. Nothing is written before the confirm |
-| Dedupe | Deterministic fingerprint: `sha256(account_key, posted, amount, normalised description, occurrence)`, `UNIQUE` in the database. Idempotency is a required property, not a nice-to-have |
+| Dedupe | Deterministic fingerprint: `sha256(account_key, posted, amount_minor, description_raw (whitespace-collapsed only), occurrence)`, `UNIQUE` in the database. Hashes the bank's text, **not** the normalised form, so improving the normaliser can never change a fingerprint and re-import duplicates. Idempotency is a required property, not a nice-to-have |
+| Account at upload | Chosen explicitly on the Import screen (pre-selected from the last import with the same header signature). The header signature identifies the file's *shape*, never its account |
+| Transfers | **Simple transfer flag in v1.** Any transaction can be marked a transfer; a suggested-pair hint appears when an equal and opposite amount exists in another account within 5 days. Transfers are excluded from spend, income and net, and shown as their own line |
+| Undo import | Settings > Import history has **Undo**, which deletes every row from that `import_id` in one transaction and keeps the `imports` row marked `undone_at`. This is the only way a row is ever deleted. The file hash is released so the corrected file can be re-imported |
+| Mappings | For CSV: embedded defaults plus an optional `mappings.json` in `/data`, keyed by header signature, so a new bank needs no rebuild. **For PDF this does not hold**: a statement layout is code, one parser per institution, covered by golden tests on synthetic fixtures. A bank redesigning its statement is a code change and a release. No in-app editor in v1 |
 | Occurrence counter | Why two identical $4.75 coffees on one day both import, while re-importing the same file inserts nothing |
 | Raw rows | Stored alongside the normalised row, forever (JSON), so a parser fix re-derives instead of re-downloading |
 | Column mappings | Per-institution config (data file, keyed by header signature), never `if institution == …` in code |
 | Insight granularity | **Normalised merchant rollup** in v1; categories/rules deferred |
 | Cadence | Monthly. The UI assumes a monthly ritual and shows the age of the last import; there is no daily-refresh button because there is nothing to refresh |
-| Overdue banner | Part of v1, not polish. Amber after the configured interval (default 30 days) |
+| Overdue banner | Part of v1, not polish. Amber after the configured interval (default 35 days, so a monthly habit with a few days of slack never trips it) |
 | Money | **Integer minor units** (cents) in the database and on the wire. Never a float. See [§6](#6-money-and-why-it-is-not-a-float) |
 | Storage | SQLite (`modernc.org/sqlite`, pure Go, no cgo) — the same choice as Warbler |
 | Language / UI | **Go + SvelteKit**, single binary with the frontend embedded via `go:embed`, matching Polaris, bwmon, Warbler and Meridian |
@@ -110,10 +118,20 @@ Answer these before Phase 1 finishes; the ones marked *(blocking)* gate the impo
 1. **Which accounts exist in v1, and what do I call them?** *(blocking)* Names are mine to choose
    ("capone-checking", "deltacu-savings"), and they appear in every fingerprint — so renaming an
    account later re-imports nothing but does break continuity.
-2. **Get one real CSV from each institution** *(blocking, [HUMAN])*. Download a month from Capital One
-   and from Delta Community and hand them over. Capital One's credit-card export and bank-account
-   export are different shapes, and Delta Community is a third. Every parser decision comes from
-   looking at the real files, not from guessing headers.
+2. **Real files** *(partly answered 2026-10-31)*: one statement PDF from each institution is in hand and
+   analysed in NOTES.md. The Capital One account is new, so its only statement is a first cycle with four
+   purchases and an **empty** "Payments, Credits and Adjustments" block: that layout is unverified until
+   the first payment posts, and until then it is built from a synthetic fixture and flagged as such.
+   Still wanted: a Delta statement that includes a transfer. Every parser decision comes from the real
+   files, not from guessing layouts.
+12. **Which PDF library?** *(blocking, needs approval)* The server must stay pure Go and distroless, so
+    shelling out to `pdftotext` is out unless poppler is added to the image. Candidates are a pure-Go
+    text extractor that exposes glyph positions (`ledongthuc/pdf` is the first to try) against
+    adding poppler to a non-distroless stage. (Recommendation: spike the pure-Go library in Phase 0
+    on both real files; if it cannot recover the Delta columns reliably, fall back to poppler and
+    accept the larger image.)
+13. ~~**Is a CSV or QFX download available?**~~ **Answered 2026-10-31: no**, for either institution.
+    PDF statements are the only source, so the PDF parser is the core of v1 rather than an add-on.
 3. **Sign convention per institution** *(blocking)*: is a purchase positive or negative in each
    export? Resolved by question 2, but worth stating: the importer has a per-mapping `invert` flag and
    the preview shows the result so a wrong guess is visible before it's committed.
@@ -121,10 +139,8 @@ Answer these before Phase 1 finishes; the ones marked *(blocking)* gate the impo
 5. **Balances**: do I want per-account balance snapshots (a statement balance I type in monthly), or
    transactions only? (Recommendation: transactions only in v1; a balance you type is a different
    habit, and a wrong balance is worse than none.)
-6. **Transfers between my own accounts**: Capital One → Delta Community shows up as an outflow in one
-   file and an inflow in the other. (Recommendation: v1.5, with a "this is a transfer" flag on a
-   transaction and its pair, so spend isn't double-counted. v1 shows it plainly and says so on the
-   month page rather than silently miscounting.)
+6. ~~**Transfers between my own accounts**~~ **Decided 2026-10-31:** simple transfer flag in v1 with a
+   suggested-pair hint; transfers are excluded from spend, income and net. See §2.
 7. **Backfill**: import a year of history from the banks' CSV exports in Phase 3? (Recommendation:
    yes — CSV makes it cheap, and one month of data can't show a trend.)
 8. **Backup encryption**: an `rclone crypt` remote over the existing `r2:` remote, so financial data is
@@ -158,7 +174,9 @@ Answer these before Phase 1 finishes; the ones marked *(blocking)* gate the impo
 | CI | GitHub Actions: tests on every push; publish on main and on `v*` tags; no secrets in the repo | Matches the rest |
 
 **No outside dependencies in the server.** `modernc.org/sqlite` is the one exception, and it is
-vendored-or-pinned deliberately; anything else needs asking first.
+vendored-or-pinned deliberately; anything else needs asking first. **A PDF text library is expected to
+become the second exception** (§3 question 12), and it is added only after the Phase 0 spike shows it
+reads both real statements, with your approval.
 
 ## 5. Architecture
 
@@ -188,8 +206,9 @@ vendored-or-pinned deliberately; anything else needs asking first.
 - **Nothing is fetched.** Every byte in this app arrives because I uploaded a file or typed a value.
   The only outbound traffic the container causes is the R2 mirror (host-side) — and none at all from
   the container itself if the mirror stays in the host watcher.
-- **The app never deletes a transaction.** Re-imports are no-ops via the fingerprint; a genuinely wrong
-  row is corrected by an explicit action that keeps the original in `raw`.
+- **The app never deletes a transaction, except by undoing a whole import.** Re-imports are no-ops via
+  the fingerprint; a genuinely wrong row is corrected by an explicit action that keeps the original in
+  `raw`; a wrong *file* (bad sign convention, wrong account) is removed as a unit with Undo.
 
 ## 6. Money, and why it is not a float
 
@@ -224,12 +243,16 @@ imports (                             -- one row per file, always
   id INTEGER PRIMARY KEY,
   account_id INTEGER REFERENCES accounts(id),
   filename TEXT NOT NULL,
-  file_hash TEXT NOT NULL UNIQUE,     -- sha256 of the bytes: same file twice = refused early
+  file_hash TEXT NOT NULL,            -- sha256 of the bytes: same file twice = refused early
+                                      -- (UNIQUE among rows where undone_at IS NULL, via partial index)
+  undone_at DATETIME,                 -- set by Undo; the rows are deleted, this record stays
   source TEXT NOT NULL,               -- csv | ofx | …
   mapping TEXT NOT NULL,              -- which column mapping was used
   imported_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   rows_seen INTEGER, rows_new INTEGER, rows_duplicate INTEGER, rows_rejected INTEGER,
   range_from DATE, range_to DATE,
+  statement_key TEXT,                 -- "account|period" for a statement; partial UNIQUE while undone_at IS NULL
+  checks TEXT,                        -- JSON: what reconciled (opening, closing, per-row balances) and how
   notes TEXT
 )
 
@@ -241,10 +264,11 @@ transactions (
   amount_minor INTEGER NOT NULL,      -- negative = money out
   currency TEXT NOT NULL DEFAULT 'USD',
   description_raw TEXT NOT NULL,      -- exactly as the bank printed it
-  description_norm TEXT NOT NULL,     -- normalised, for matching and search
+  description_norm TEXT NOT NULL,     -- normalised, for matching and search; NOT in the fingerprint
   merchant_id INTEGER REFERENCES merchants(id),
   fingerprint TEXT NOT NULL UNIQUE,
-  is_transfer INTEGER NOT NULL DEFAULT 0,   -- v1.5
+  is_transfer INTEGER NOT NULL DEFAULT 0,   -- v1: excluded from spend/income/net
+  transfer_pair_id INTEGER REFERENCES transactions(id),  -- optional link to the other leg
   note TEXT,                          -- mine, never the bank's
   raw TEXT NOT NULL                   -- the original CSV row as JSON
 )
@@ -265,8 +289,12 @@ view: merchant_month                 -- SUM by merchant per month, derived
 Fingerprint:
 
 ```
-fingerprint = sha256(account_key | posted | amount_minor | description_norm | occurrence)
+fingerprint = sha256(account_key | posted | amount_minor | description_raw_collapsed | occurrence)
 ```
+
+`description_raw_collapsed` is the bank's text with runs of whitespace collapsed and nothing else done
+to it. Normalisation rules (prefix stripping, store numbers) are free to evolve because they never
+touch the fingerprint; a rule change re-derives `description_norm` and `merchant_id` from stored rows.
 
 `occurrence` is the count of *identical* tuples already seen **earlier in the same file** (0 for the
 first), which is what makes two genuinely identical coffees both import while a re-upload of the same
@@ -281,7 +309,7 @@ The flow, and the reason for each step:
 |---|---|---|
 | 1. Upload | File goes to `POST /api/imports` (multipart), held in memory under a size cap | Nothing written yet |
 | 2. Identify | `sha256(file)` checked against `imports.file_hash` — an exact re-upload is refused immediately with "already imported on <date>" | The cheapest possible dedupe |
-| 3. Map | Pick the mapping whose header signature matches; if none matches, fail with the actual headers shown | A new bank export should be a config entry, not a code change |
+| 3. Map | Pick the mapping whose header signature matches (`/data/mappings.json` overrides embedded defaults); if none matches, fail with the actual headers shown. Then the user picks the **account** | A new bank export should be a config entry, not a code change; shape and account are separate facts |
 | 4. Parse | `encoding/csv` with `FieldsPerRecord = -1`; every rejected row is counted and shown | A malformed row must not kill the file, and must not vanish silently |
 | 5. Normalise | Trim, collapse whitespace, strip leading `POS DEBIT`, `CHECKCARD`, `ACH DEBIT`, trailing `#1234`-style store numbers and card suffixes | Same merchant, one name |
 | 6. Fingerprint | As above, with the per-batch occurrence counter | Idempotency |
@@ -302,8 +330,9 @@ a pure function of the file and the mapping, and returns the same structure the 
 | **Import** | File picker, then preview table, then confirm. Rejected rows listed with the reason. |
 | **Settings** | Accounts, mappings, overdue threshold, backup status/last mirror, app version, update button. |
 
-Design rules, inherited from the rest of the homelab: phone-first (it will be used on a phone at a
-desk, or on a laptop once a month), no emojis, plain-language labels, amounts right-aligned in a
+Design rules, inherited from the rest of the homelab: **read on a phone, import on a laptop** (bank
+CSVs are a desktop download, so Import is designed laptop-first and merely works on a phone; every
+other screen is phone-first), no emojis, plain-language labels, amounts right-aligned in a
 tabular-figure font, and colour used only for state (overdue, negative) — never decoratively.
 
 ## 10. API
@@ -319,7 +348,13 @@ tabular-figure font, and colour used only for state (overdue, negative) — neve
 | GET | `/api/merchants` · PATCH `/api/merchants/{id}` | list, rename/merge |
 | POST | `/api/imports/preview` | parse + dedupe, write nothing |
 | POST | `/api/imports` | commit one file |
-| GET | `/api/imports` | history: file, range, counts, when |
+| GET | `/api/imports` | history: file, range, counts, when, undone |
+| POST | `/api/imports/{id}/undo` | delete that import's rows in one transaction; record stays, marked undone |
+| GET · POST · PATCH | `/api/accounts` · `/api/accounts/{id}` | create, rename, archive |
+| GET | `/api/mappings` | which mappings are active and whether each is embedded or overridden |
+| POST | `/api/transactions/{id}/transfer` | mark/unmark a transfer, optionally with a pair |
+| GET | `/api/settings` · PATCH | overdue threshold, display preferences |
+| GET | `/api/backup/status` | last snapshot, last mirror, size |
 | GET | `/api/export.csv?from=&to=` | the ledger back out, as CSV |
 | GET | `/api/export.json` | everything, for the app to be irrelevant in ten years |
 
@@ -361,17 +396,23 @@ Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
 
 ### Phase 0: Look at real files (blocking, no code)
 
-- **[HUMAN]** answer open questions 1–3 and hand over one CSV per institution.
-- Write the mapping config for each, by hand, against the real headers.
+- **[HUMAN]** answer open questions 1, 2, 12 and 13, and hand over the extra statements from question 2.
+- **Spike the PDF library** (question 12) in a throwaway Go program: extract positioned text from both
+  real statements and rebuild rows. No server code yet.
+- Write the layout description for each institution against the real files: Capital One (year from the
+  billing period, sign by section, totals to check) and Delta (type line plus detail line, trailing-minus
+  debits, running balance, sub-accounts, rows split across pages).
 - Decide nothing else. This phase exists so the parser is designed from evidence.
 
-**Done when:** both files parse in a throwaway script, the sign convention is confirmed by eye against
-the bank's own website for one week of transactions, and the mappings are in the repo.
+**Done when:** both real statements reconcile in the throwaway program (every row's running balance
+or the printed totals agree), the PDF library is chosen and approved, and the layout descriptions are in
+the repo as **synthetic** fixtures (a real statement is never committed).
 
 ### Phase 1: The ledger that cannot be double-imported
 
 - Go service skeleton, SQLite + migrations, `/healthz`, embedded empty SvelteKit shell.
-- `Source` interface + the CSV implementation + mappings.
+- `Source` interface + the two PDF statement parsers (Capital One, Delta Community) with their
+  reconciliation checks. A CSV source is optional and deferred: no current bank needs it.
 - Fingerprint + occurrence + the dedupe path, with fuzz and golden tests **first**.
 - Preview and commit endpoints; a minimal Import screen that can be driven from a phone.
 
@@ -384,6 +425,7 @@ by name, not silently dropped.
 - Month view, home view, merchant rollup, month-over-month comparison.
 - The overdue-import banner.
 - Transactions list with filters, note editing, and merchant rename/merge.
+- Transfer flag, suggested-pair hint, and exclusion from the month totals; Undo import.
 
 **Done when:** a month of real transactions reads correctly on a phone, the numbers match the bank's
 own totals to the cent, and the banner appears when an import is genuinely overdue.
@@ -409,7 +451,7 @@ round-trips clean.
 
 ### Phase 5: Later, only if wanted
 
-Candidates in likely order: transfers between accounts, category rules over merchants, budgets
+Candidates in likely order: category rules over merchants, budgets
 (envelopes per month), a balance-snapshot field, then — maybe — an OFX or Teller `Source` behind the
 same interface. Plaid stays a design possibility, not a plan.
 
