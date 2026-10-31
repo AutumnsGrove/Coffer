@@ -227,9 +227,18 @@ of that is green.
 
 Each slice is built test-first. The three columns are the test list written **before** the code.
 
-### Slice 0: the harness
+### Slice 0: the harness (done 2026-10-31)
 Docker stages, compose, Makefile, CI, the privacy test, a deliberately failing test that is then made to
 pass. **Done when:** an empty project is green on amd64 and arm64 and `make bad` runs (and finds nothing).
+
+What it delivered, beyond the list: `make test` is one gate (gofmt, vet, staticcheck, race detector,
+per-package coverage floors from `coverage-gates.txt`); `internal/privacy` scans the repo on every run;
+`internal/covgate` enforces the floors and fails closed; `internal/version` validates the build stamp
+and carries the first fuzz target; the production image is 1.6 MB, non-root, and runs with a read-only
+root, no network and all capabilities dropped. Verified on arm64 and on emulated amd64, and the gate was
+shown to fail (impossible coverage floor, badly formatted file). Two things the gate caught on its own
+first run: a Go pseudo-version timestamp that looked like an account number, and coverage below the
+floor on two packages. `CLAUDE.md` carries these conventions for whoever builds the next slice.
 
 ### Slice 1: money
 | happy | sad | bad |

@@ -4,7 +4,7 @@ A private, self-hosted finance tracker for one person: drop in a monthly bank ex
 honest picture of the month — what came in, what went out, and which merchants it actually went to.
 Kept on my own machine, mirrored to my own private bucket, exportable as plain CSV.
 
-**Status: planned.** No code yet. `PLAN.md` is the source of truth for what gets built and why;
+**Status: Slice 0 done.** The test harness exists (Docker, the gate, CI); the app itself is not built yet. `PLAN.md` is the source of truth for what gets built and why;
 `NOTES.md` records what was verified and what is still unknown.
 
 ## Why
