@@ -117,6 +117,42 @@ now ignored) and parser fixtures must be synthetic.
 - Whether a CSV or QFX download exists in either bank's desktop online banking (not the phone app) is
   **unverified**; worth one more look before committing to PDF parsing.
 
+## 2026-10-31 — Phase 0 spike: both statements reconcile
+
+`spike/pdfread` (throwaway, no statement data in it) reads both real files with `ledongthuc/pdf` and
+checks them against what each statement prints about itself. Results, counts only:
+
+| Statement | Rows | Checks | Result |
+|---|---|---|---|
+| Capital One credit card | 4 purchases, 0 credits | rows = summary Transactions; rows = printed period total; previous + purchases + fees + interest = new balance; credits = Payments + Other Credits | all pass |
+| Delta, savings block | 0 | opening = printed ending | pass |
+| Delta, checking block | 78 | every row: previous balance + amount = printed balance; last row = printed Ending Balance; opening + in − out = ending | all pass, 0 failures |
+
+A negative test misreads one sign on purpose: the chain check fails and names the row, and every row
+after it still passes (the chain restarts from the printed balance), so one bad row points at itself.
+
+What the spike learned that the plan did not know:
+
+- **The library's own text APIs fail on Delta.** `Content().Text` reports every glyph at one position
+  and `GetTextByRow()` returns one row for the page. Delta's pages are a single text block of
+  fixed-width Courier lines (each a `Tj` string, columns made of spaces) stepped down with `Td`, plus
+  a background **image** holding the headings and address box. The fix is small: walk the content
+  stream with the library's public `Interpret`, track `cm`, `Tm`, `Td`, `TL`, `T*`, and read each shown
+  string's start point and font. That gives the same lines `pdftotext -layout` does.
+- **Capital One needs no workaround** in the library, but the same line-rebuild code serves both, so
+  there is one extractor.
+- **Delta headings are not text.** The ledger is found by its first `Balance Forward` line, not by
+  searching for column titles. Everything after a block's `Ending Balance` is trailer (dividend
+  totals, a fee table, a promotion) and is ignored; a line lost *inside* a ledger is a failure.
+- **A dropped row breaks the chain**, so the running balance is a stronger check than a row count:
+  78 rows passing means none are missing, without knowing the true count.
+- The Capital One *payments and credits* block is empty in the only file, so that path is checked
+  only against a synthetic fixture. Cycles that cross a year (Dec to Jan) are handled in code but
+  untested.
+
+Library risk: a single-maintainer pseudo-version (`v0.0.0-20261020...`). Pin it, and vendor it before
+Phase 4.
+
 ### Open items carried in PLAN.md §3
 
 Accounts and their names, real CSVs, sign conventions, currency, balances, transfers, backfill,

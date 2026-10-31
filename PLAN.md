@@ -83,7 +83,7 @@ tolerates a month of lag — which is the cadence I actually want anyway.
 |---|---|
 | Name | **Coffer** — decided 2026-10-31 |
 | Data source (v1) | **Monthly statement PDFs.** Manual, per-institution. Confirmed 2026-10-31: neither Capital One (new account) nor Delta Community offers a CSV or QFX download to this account, so PDF is the only way in, not a fallback. CSV stays a sibling `Source` for a future bank that has one |
-| PDF reading | **Built into the Go server**, as a `Source` sibling to CSV: text layer → rows, never OCR, nothing sent anywhere. The PDF library is **not chosen yet**; it is the Phase 0 spike and needs approval before it enters `go.mod` |
+| PDF reading | **Built into the Go server**, as a `Source` sibling to CSV: text layer → rows, never OCR, nothing sent anywhere. Library: **`ledongthuc/pdf`**, approved and proven in the Phase 0 spike (see NOTES.md); line geometry is rebuilt on top of its `Interpret` because its own text API fails on Delta's files |
 | Statement checks | A PDF import must **prove itself** before the preview is offered: Delta rows are checked against the printed running balance, Capital One rows against the printed totals. A statement that does not reconcile is refused, naming the row where it diverges |
 | Statement dedupe | A statement is identified by (account, period) as well as by file hash, so a re-downloaded copy of the same month is caught even though its bytes differ. Row fingerprints still back it up |
 | One file, many accounts | A Delta statement holds savings and checking together. The import step maps each section to an account, so one file can write to several |
@@ -124,12 +124,12 @@ Answer these before Phase 1 finishes; the ones marked *(blocking)* gate the impo
    the first payment posts, and until then it is built from a synthetic fixture and flagged as such.
    Still wanted: a Delta statement that includes a transfer. Every parser decision comes from the real
    files, not from guessing layouts.
-12. **Which PDF library?** *(blocking, needs approval)* The server must stay pure Go and distroless, so
-    shelling out to `pdftotext` is out unless poppler is added to the image. Candidates are a pure-Go
-    text extractor that exposes glyph positions (`ledongthuc/pdf` is the first to try) against
-    adding poppler to a non-distroless stage. (Recommendation: spike the pure-Go library in Phase 0
-    on both real files; if it cannot recover the Delta columns reliably, fall back to poppler and
-    accept the larger image.)
+12. ~~**Which PDF library?**~~ **Decided 2026-10-31: `github.com/ledongthuc/pdf`**, approved, and the
+    spike confirmed it. Pure Go, so the image stays distroless. One caveat found: its own
+    `Content()` and `GetTextByRow()` lose all positions on Delta's PDFs (every glyph at one point), so
+    Coffer rebuilds line geometry from the library's public `Interpret` and font decoder (about 150
+    lines, `spike/pdfread/extract.go`). The library is a single-maintainer pseudo-version, so it is
+    pinned in `go.sum` and should be vendored before Phase 4.
 13. ~~**Is a CSV or QFX download available?**~~ **Answered 2026-10-31: no**, for either institution.
     PDF statements are the only source, so the PDF parser is the core of v1 rather than an add-on.
 3. **Sign convention per institution** *(blocking)*: is a purchase positive or negative in each
@@ -174,9 +174,9 @@ Answer these before Phase 1 finishes; the ones marked *(blocking)* gate the impo
 | CI | GitHub Actions: tests on every push; publish on main and on `v*` tags; no secrets in the repo | Matches the rest |
 
 **No outside dependencies in the server.** `modernc.org/sqlite` is the one exception, and it is
-vendored-or-pinned deliberately; anything else needs asking first. **A PDF text library is expected to
-become the second exception** (§3 question 12), and it is added only after the Phase 0 spike shows it
-reads both real statements, with your approval.
+vendored-or-pinned deliberately; anything else needs asking first. **`ledongthuc/pdf` is the second
+exception**, approved 2026-10-31 after the Phase 0 spike showed it reads both real statements (§3
+question 12).
 
 ## 5. Architecture
 
