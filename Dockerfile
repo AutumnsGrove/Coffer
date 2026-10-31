@@ -43,4 +43,7 @@ RUN go build \
 FROM gcr.io/distroless/static-debian13:nonroot AS final
 COPY --from=build /out/coffer /coffer
 USER nonroot:nonroot
+# Production port, loopback only on the potato: compose publishes 127.0.0.1:8894 and
+# `tailscale serve` proxies it. 8894 is reserved for Coffer (8893 is Cairn, 8892 is Warbler).
+EXPOSE 8894
 ENTRYPOINT ["/coffer"]

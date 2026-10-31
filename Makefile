@@ -39,6 +39,8 @@ vuln:
 image:
 	docker build --target final --build-arg VERSION=$(VERSION) -t coffer:$(VERSION) -t coffer:latest .
 
+# The image listens on 8894 (reserved, loopback only on the potato; 8893 is Cairn, 8892 is Warbler).
+# `make e2e` is where that port is actually exercised — see DEVELOPMENT.md.
 smoke: image
 	docker run --rm coffer:latest --version
 

@@ -196,7 +196,8 @@ Docker is how everything runs: tests, fuzzing, the web build, the e2e suite and 
 **Container tests** (build tag `e2e`) assert the claims `PLAN.md` makes about the image:
 
 - runs as a non-root user; root filesystem is read-only; writing anywhere but `/data` fails
-- `/healthz` returns only `status` and `version`
+- `/healthz` returns only `status` and `version`, on the production port **8894** (loopback only; that is
+  the port `tailscale serve` proxies and the port Meridian probes at `http://localhost:8894/healthz`)
 - works with `--network none`: the app makes no outbound requests, ever
 - survives `docker kill` during an import: the database is either fully before or fully after
 - restart keeps data; a full-disk `/data` volume yields a clear error, not a corrupt database

@@ -7,6 +7,10 @@ Kept on my own machine, mirrored to my own private bucket, exportable as plain C
 **Status: Slice 0 done.** The test harness exists (Docker, the gate, CI); the app itself is not built yet. `PLAN.md` is the source of truth for what gets built and why;
 `NOTES.md` records what was verified and what is still unknown.
 
+**Port: 8894.** Reserved on the potato, verified free 2026-10-31. The container publishes to
+`127.0.0.1:8894` only; `tailscale serve` is the way in, so the URL it will answer on is
+`https://lepotato.taild95077.ts.net:8894`. Neighbours: 8893 is Cairn, 8892 is Warbler.
+
 ## Why
 
 - **Monthly, not daily.** Every budgeting app is built for daily engagement, which is their metric, not

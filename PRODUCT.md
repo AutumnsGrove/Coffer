@@ -19,6 +19,9 @@ A private, self-hosted ledger that turns a monthly bank CSV into a readable pict
 forever on her own machine. Success is a month she can read in two minutes and trust to the cent, and an
 app that tells her when she has forgotten to import, because forgetting is the real failure mode.
 
+It lives on her hardware on the tailnet, at port **8894**, and her financial data never leaves that machine
+except as an encrypted backup.
+
 ## Brand Personality
 
 Warm, personal, exact. A well-kept household ledger rather than a fintech product. It speaks plainly, never

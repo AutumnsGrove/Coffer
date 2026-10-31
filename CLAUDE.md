@@ -16,6 +16,11 @@ statements from her two banks (Capital One credit card, Delta Community checking
 reconciles them against what each statement prints about itself, stores integer cents in SQLite, and
 shows the month. Go 1.26 backend, SvelteKit frontend, one Docker image, tailnet only.
 
+**It listens on port 8894**, loopback only (`127.0.0.1:8894`); `tailscale serve` is the way in, so the
+address she opens is `https://lepotato.taild95077.ts.net:8894`. The port is reserved and was verified free
+on 2026-10-31 — 8893 belongs to Cairn and 8892 to Warbler. `/healthz` is probed at
+`http://localhost:8894/healthz`, and nothing in the app may listen on any other port.
+
 ## Commands (everything runs in Docker)
 
 ```bash
