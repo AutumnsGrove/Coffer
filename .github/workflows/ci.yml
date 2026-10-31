@@ -1,0 +1,32 @@
+name: ci
+
+# Everything runs in the same containers as local development (DEVELOPMENT.md section 8), on both
+# architectures, because the potato is arm64. No secrets are used or needed.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Vet, staticcheck, race detector, coverage
+        run: make test
+      - name: Bad-path sweep
+        run: make bad
+      - name: Fuzz smoke
+        run: make fuzz-smoke
+      - name: Vulnerability scan
+        run: make vuln
+      - name: Image builds and runs
+        run: make smoke

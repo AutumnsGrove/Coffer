@@ -1,0 +1,21 @@
+# Minimum statement coverage per package (DEVELOPMENT.md section 8).
+# A key covers that package and everything under it; the longest matching key wins.
+# Floors only ever go up. Lowering one needs a written reason here.
+
+default 85
+
+# The core: where silent corruption lives. Listed now so they are 95 from the day they exist.
+internal/money 95
+internal/fingerprint 95
+internal/normalise 95
+internal/parse 95
+internal/importer 95
+internal/store 95
+
+# main() is a one-line wrapper around run(); only run() is testable, so cmd/ gets a lower floor.
+# Keep logic out of main packages.
+cmd 75
+
+# privacy.Scan returns OS errors (unreadable file, failed stat) that cannot be provoked as root
+# inside the test container.
+internal/privacy 80

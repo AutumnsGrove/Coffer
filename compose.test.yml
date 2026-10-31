@@ -1,0 +1,55 @@
+# Test runner. Everything that gates a slice runs here (DEVELOPMENT.md section 7).
+# Use through `make`, not directly. The live source is bind-mounted, so editing a file and
+# re-running needs no image rebuild; module and build caches live in named volumes.
+name: coffer-test
+
+x-runner: &runner
+  build:
+    context: .
+    target: test
+  working_dir: /src
+  volumes:
+    - .:/src
+    - gomod:/go/pkg/mod
+    - gobuild:/root/.cache/go-build
+
+services:
+  # Full gate: vet, staticcheck, race detector, coverage floors (scripts/gate.sh).
+  test:
+    <<: *runner
+    command: ["sh", "scripts/gate.sh"]
+
+  # Only the bad paths (subtests named bad/...). A fast safety sweep.
+  bad:
+    <<: *runner
+    command: ["go", "test", "-count=1", "-run", "/bad", "./..."]
+
+  # Only the sad paths.
+  sad:
+    <<: *runner
+    command: ["go", "test", "-count=1", "-run", "/sad", "./..."]
+
+  # One fuzz target: make fuzz P=./internal/version T=FuzzValid FUZZTIME=60s
+  fuzz:
+    <<: *runner
+    environment:
+      P: ${P:-}
+      T: ${T:-}
+      FUZZTIME: ${FUZZTIME:-30s}
+    command: ["sh", "-c", 'go test -run "^$$" -fuzz "^$$T\\$$" -fuzztime "$$FUZZTIME" "$$P"']
+
+  # Every fuzz target in the module, briefly. CI runs this on each push.
+  fuzz-smoke:
+    <<: *runner
+    environment:
+      FUZZTIME: ${FUZZTIME:-5s}
+    command: ["sh", "scripts/fuzz-smoke.sh"]
+
+  # Known-vulnerability scan. Needs network for the vulnerability database.
+  vuln:
+    <<: *runner
+    command: ["govulncheck", "./..."]
+
+volumes:
+  gomod:
+  gobuild:
