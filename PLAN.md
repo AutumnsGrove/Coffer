@@ -61,7 +61,7 @@ tolerates a month of lag — which is the cadence I actually want anyway.
 - Merchant-level insight before category-level insight ("$340 at Publix this month" is most of the
   value of a taxonomy for a fraction of the work).
 - A reminder that works without willpower: the app knows when it is overdue and says so.
-- Local-first. SQLite on the potato, encrypted mirror to R2, plain-CSV export that outlives the app.
+- Local-first. SQLite on the potato (one file, `data/coffer.db`), a plain mirror to my own private R2 bucket, plain-CSV export that outlives the app.
 - Data source behind an interface, so OFX or an aggregator can be added as a sibling implementation
   later without touching the importer, the database or the UI.
 
@@ -85,6 +85,7 @@ tolerates a month of lag — which is the cadence I actually want anyway.
 | Data source (v1) | **Monthly statement PDFs.** Manual, per-institution. Confirmed 2026-10-31: neither Capital One (new account) nor Delta Community offers a CSV or QFX download to this account, so PDF is the only way in, not a fallback. CSV stays a sibling `Source` for a future bank that has one |
 | PDF reading | **Built into the Go server**, as a `Source` sibling to CSV: text layer → rows, never OCR, nothing sent anywhere. Library: **`ledongthuc/pdf`**, approved and proven in the Phase 0 spike (see NOTES.md); line geometry is rebuilt on top of its `Interpret` because its own text API fails on Delta's files |
 | Statement checks | A PDF import must **prove itself** before the preview is offered: Delta rows are checked against the printed running balance, Capital One rows against the printed totals. A statement that does not reconcile is refused, naming the row where it diverges |
+| Balances | Stored per account from each statement (opening, closing, as-of date), shown on Home labelled with the statement date, never typed in by hand |
 | Statement dedupe | A statement is identified by (account, period) as well as by file hash, so a re-downloaded copy of the same month is caught even though its bytes differ. Row fingerprints still back it up |
 | One file, many accounts | A Delta statement holds savings and checking together. The import step maps each section to an account, so one file can write to several |
 | Data source (later) | OFX / Teller / Plaid sit behind the same `Source` interface — siblings, never rewrites |
@@ -95,7 +96,9 @@ tolerates a month of lag — which is the cadence I actually want anyway.
 | Undo import | Settings > Import history has **Undo**, which deletes every row from that `import_id` in one transaction and keeps the `imports` row marked `undone_at`. This is the only way a row is ever deleted. The file hash is released so the corrected file can be re-imported |
 | Mappings | For CSV: embedded defaults plus an optional `mappings.json` in `/data`, keyed by header signature, so a new bank needs no rebuild. **For PDF this does not hold**: a statement layout is code, one parser per institution, covered by golden tests on synthetic fixtures. A bank redesigning its statement is a code change and a release. No in-app editor in v1 |
 | Occurrence counter | Why two identical $4.75 coffees on one day both import, while re-importing the same file inserts nothing |
-| Raw rows | Stored alongside the normalised row, forever (JSON), so a parser fix re-derives instead of re-downloading |
+| Raw rows | The statement lines each row was read from (type line plus detail lines) are stored with it, forever, as JSON, so a normaliser or merchant-rule fix re-derives without re-importing |
+| Original PDFs | **Not kept** (decided 2026-10-31). The PDF is read in memory and discarded; only extracted text and numbers are stored. Cost: a bug in how a *layout is read* (not how a row is interpreted) is fixed by re-downloading the statement, which the bank keeps. Benefit: no file with a name, address and account number ever sits on disk or in R2 |
+| Accounts | Three to start: `capone-credit`, `deltacu-checking`, `deltacu-savings` (confirmed 2026-10-31). **Accounts are added in Settings**, any time: a key (fixed once created), a display name (editable), institution, type, and which statement layout reads it. An account is archived, never deleted. A new account at an institution that already has a parser needs no code; a new institution needs a new parser (a release) |
 | Column mappings | Per-institution config (data file, keyed by header signature), never `if institution == …` in code |
 | Insight granularity | **Normalised merchant rollup** in v1; categories/rules deferred |
 | Cadence | Monthly. The UI assumes a monthly ritual and shows the age of the last import; there is no daily-refresh button because there is nothing to refresh |
@@ -106,7 +109,7 @@ tolerates a month of lag — which is the cadence I actually want anyway.
 | Hosting | The potato, in Docker Compose, image pinned by digest in GHCR, `tailscale serve` on **port 8894** (verified free 2026-10-31) |
 | Updates | The established pattern: host-side watcher, digest pinned in `.env`, health check, rollback |
 | Auth | None. Tailnet-only is the boundary, same as Polaris and Warbler |
-| Backups | Nightly compressed snapshot + `rclone` mirror to R2 through an **encrypted** remote, plus a CSV/JSON export on demand |
+| Backups | Nightly compressed snapshot + `rclone` mirror to R2 to the existing private `r2:` remote as plain files (decided 2026-10-31: no crypt layer), plus a CSV/JSON export on demand |
 | Discovery | A Meridian tile whose vital is **days since last import** — the one number that means something here |
 | Reminder (optional) | A monthly email through the Resend setup already in `maintenance-setup/`, if the in-app banner proves insufficient |
 | Licence | MIT, matching the rest of the homelab |
@@ -115,9 +118,9 @@ tolerates a month of lag — which is the cadence I actually want anyway.
 
 Answer these before Phase 1 finishes; the ones marked *(blocking)* gate the importer.
 
-1. **Which accounts exist in v1, and what do I call them?** *(blocking)* Names are mine to choose
-   ("capone-checking", "deltacu-savings"), and they appear in every fingerprint — so renaming an
-   account later re-imports nothing but does break continuity.
+1. ~~**Which accounts exist in v1, and what do I call them?**~~ **Decided 2026-10-31:** `capone-credit`,
+   `deltacu-checking`, `deltacu-savings`, with more addable from Settings at any time (§2). Keys are
+   fixed once created because they appear in every fingerprint; display names stay editable.
 2. **Real files** *(partly answered 2026-10-31)*: one statement PDF from each institution is in hand and
    analysed in NOTES.md. The Capital One account is new, so its only statement is a first cycle with four
    purchases and an **empty** "Payments, Credits and Adjustments" block: that layout is unverified until
@@ -136,16 +139,18 @@ Answer these before Phase 1 finishes; the ones marked *(blocking)* gate the impo
    export? Resolved by question 2, but worth stating: the importer has a per-mapping `invert` flag and
    the preview shows the result so a wrong guess is visible before it's committed.
 4. **Currencies**: USD only? (Recommendation: yes, and reject any row that isn't, loudly.)
-5. **Balances**: do I want per-account balance snapshots (a statement balance I type in monthly), or
-   transactions only? (Recommendation: transactions only in v1; a balance you type is a different
-   habit, and a wrong balance is worse than none.)
+5. ~~**Balances**~~ **Decided 2026-10-31: store and show on Home.** Statements print opening and closing
+   balances, so nothing is typed by hand. Stored per account with an as-of date (see `account_balances`),
+   shown on Home labelled with the statement date, and used by the import checks. A balance is always
+   "as of the last statement", never live.
 6. ~~**Transfers between my own accounts**~~ **Decided 2026-10-31:** simple transfer flag in v1 with a
    suggested-pair hint; transfers are excluded from spend, income and net. See §2.
-7. **Backfill**: import a year of history from the banks' CSV exports in Phase 3? (Recommendation:
-   yes — CSV makes it cheap, and one month of data can't show a trend.)
-8. **Backup encryption**: an `rclone crypt` remote over the existing `r2:` remote, so financial data is
-   never stored as plaintext in R2. (Recommendation: yes. Cost: one passphrase to keep somewhere
-   safe, and no browsing the bucket.)
+7. ~~**Backfill**~~ **Decided 2026-10-31: yes, the last 12 months of Delta Community statements** (about 12
+   PDFs to download by hand, Phase 3). Capital One is a new account with nothing to backfill.
+8. ~~**Backup encryption**~~ **Decided 2026-10-31: plain mirror**, no `rclone crypt`. The bucket is private and
+   yours; the cost is that anyone with the R2 credentials could read the statements' contents, and that
+   the credentials on the potato are the only protection. Easy to add later: a crypt remote over the same
+   bucket, with a one-time re-upload.
 9. **Merchant normalisation**: is an automatic strip-the-noise rule set plus a manual "this is the same
    merchant" merge good enough, or is a per-merchant override table needed on day one?
    (Recommendation: automatic rules + a rename/merge action, which is the same table.)
@@ -196,7 +201,7 @@ question 12).
  │   SQLite: accounts · imports · transactions · merchants      │
  │   data/coffer.db · data/exports/                             │
  └──────────────────────────┬───────────────────────────────────┘
-                            │ nightly: zstd snapshot + rclone (crypt)
+                            │ nightly: zstd snapshot + rclone
                             ▼
                     Cloudflare R2  r2:coffer-backups
 ```
@@ -270,7 +275,7 @@ transactions (
   is_transfer INTEGER NOT NULL DEFAULT 0,   -- v1: excluded from spend/income/net
   transfer_pair_id INTEGER REFERENCES transactions(id),  -- optional link to the other leg
   note TEXT,                          -- mine, never the bank's
-  raw TEXT NOT NULL                   -- the original CSV row as JSON
+  raw TEXT NOT NULL                   -- the statement lines this row was read from, as JSON (never the PDF)
 )
 
 merchants (
@@ -278,6 +283,14 @@ merchants (
   name TEXT NOT NULL UNIQUE,          -- display name, editable
   first_seen DATE, last_seen DATE,
   aliases TEXT                        -- JSON array of the normalised forms merged into it
+)
+
+account_balances (                   -- from each statement; Home shows the latest per account
+  account_id INTEGER NOT NULL REFERENCES accounts(id),
+  as_of DATE NOT NULL,                -- the statement's end date
+  balance_minor INTEGER NOT NULL,     -- credit cards: amount owed, as printed
+  import_id INTEGER NOT NULL REFERENCES imports(id),   -- undo removes it with the import
+  PRIMARY KEY (account_id, as_of)
 )
 
 category_rules / categories          -- v1.5+, not in v1 by decision
@@ -324,7 +337,7 @@ a pure function of the file and the mapping, and returns the same structure the 
 
 | Screen | Contents |
 |---|---|
-| **Home / This month** | In, out, net. The overdue banner if applicable. Top 8 merchants with amounts and counts. Per-account totals. Previous/next month. |
+| **Home / This month** | In, out, net. The overdue banner if applicable. Top 8 merchants with amounts and counts. Per-account balances (as of the last statement) and totals. Previous/next month. |
 | **Month** | A single month in full: every transaction grouped by merchant or by day (toggle), month-over-month comparison for the same merchants. |
 | **Transactions** | Filter by account, month, merchant, text; edit note, rename merchant, merge merchant. Amounts and dates are read-only. |
 | **Import** | File picker, then preview table, then confirm. Rejected rows listed with the reason. |
@@ -333,7 +346,7 @@ a pure function of the file and the mapping, and returns the same structure the 
 Design rules, inherited from the rest of the homelab: **read on a phone, import on a laptop** (bank
 CSVs are a desktop download, so Import is designed laptop-first and merely works on a phone; every
 other screen is phone-first), no emojis, plain-language labels, amounts right-aligned in a
-tabular-figure font, and colour used only for state (overdue, negative) — never decoratively.
+tabular-figure font, and colour used only for state (overdue, transfer, a rise or fall against last month) — never decoratively. Type is **Lexend** for words and **IBM Plex Mono** for every amount (decided 2026-10-31: Lexend has no tabular figures, and a monospaced face keeps every column of money aligned). Both are bundled.
 
 ## 10. API
 
@@ -380,15 +393,15 @@ wire format.
 Two different promises, both kept:
 
 - **Backups** protect against disk loss: nightly `zstd` snapshot of `coffer.db` (via SQLite's online
-  backup API, not `cp` — WAL), kept locally for 30 days, then mirrored to R2 through an **encrypted**
-  `rclone crypt` remote. Verified with a real restore, not a design.
+  backup API, not `cp` — WAL), kept locally for 30 days, then mirrored to R2 to R2 through the existing
+  `r2:` remote, unencrypted by decision (§3 question 8). Verified with a real restore, not a design.
 - **Export** protects against *me* losing interest in the code: `GET /api/export.json` and
   `/api/export.csv` produce a complete, documented, plain-text dump. If Coffer vanished tomorrow, the
   data would still be readable, and this is tested by a round-trip (export → wipe a scratch database →
   import → diff).
 
 Financial data is the most sensitive thing on this box. It never goes to a third party, never to a
-model provider, and never to R2 in plaintext.
+model provider, and reaches R2 only as a plain mirror into your own private bucket, by choice.
 
 ## 13. Phases
 
@@ -433,7 +446,7 @@ own totals to the cent, and the banner appears when an import is genuinely overd
 ### Phase 3: Fill it in and protect it
 
 - **[HUMAN]** backfill a year of history (open question 7).
-- Nightly snapshot + encrypted R2 mirror + restore exercised for real.
+- Nightly snapshot + R2 mirror + restore exercised for real.
 - JSON/CSV export with the round-trip test.
 - `coffer verify`: files present, database integrity, unreferenced rows, currency sanity.
 
@@ -470,7 +483,7 @@ same interface. Plaid stays a design possibility, not a plan.
 1. **No bank credentials.** Not in the app, not in config, not in a log. The only inputs are files I
    hand it.
 2. **Nothing leaves the box.** No aggregator, no analytics, no model provider, no telemetry, no
-   outside fonts or scripts. Financial data is mirrored only to my own R2, encrypted.
+   outside fonts or scripts. Financial data is mirrored only to my own private R2 bucket, as a plain copy by choice (no crypt layer).
 3. **Imports are idempotent, always.** A duplicate insert is a data-corruption bug, not a quirk.
 4. **Raw rows are kept.** Any derived value must be recomputable from what was stored.
 5. **Money is integers.** Minor units end to end, parsed from text, never a float.

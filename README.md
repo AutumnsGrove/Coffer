@@ -2,7 +2,7 @@
 
 A private, self-hosted finance tracker for one person: drop in a monthly bank export, and get an
 honest picture of the month — what came in, what went out, and which merchants it actually went to.
-Kept on my own machine, backed up encrypted, exportable as plain CSV.
+Kept on my own machine, mirrored to my own private bucket, exportable as plain CSV.
 
 **Status: planned.** No code yet. `PLAN.md` is the source of truth for what gets built and why;
 `NOTES.md` records what was verified and what is still unknown.
@@ -19,7 +19,7 @@ Kept on my own machine, backed up encrypted, exportable as plain CSV.
   rather than depending on discipline.
 - **Merchant insight beats categories.** "$340 at Publix this month" is most of the value of a category
   taxonomy for a fraction of the work, and it comes from data already on hand.
-- **Mine, and durable.** SQLite on the potato, an encrypted mirror to R2, and a JSON/CSV export that
+- **Mine, and durable.** SQLite on the potato, a plain mirror to my own R2 bucket, and a JSON/CSV export that
   would still be readable if this codebase vanished.
 
 ## What it will do
@@ -31,7 +31,7 @@ Kept on my own machine, backed up encrypted, exportable as plain CSV.
                                      │
               month view · merchant rollup · overdue banner · export
                                      │
-                        nightly snapshot → encrypted R2 mirror
+                        nightly snapshot → R2 mirror
 ```
 
 Every import is **idempotent**: re-uploading the same month, or overlapping ranges, inserts nothing.

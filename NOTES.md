@@ -56,7 +56,7 @@ Two corrections the research made worth keeping:
 | Go on the box | 1.26.5 linux/arm64 |
 | Node on the box | v20.20.2 (build-time only; the binary embeds the build) |
 | Docker | 29.6.1 with Compose v5.3 |
-| `rclone` remotes | `r2:` only — **no crypt remote yet**, so the encrypted backup target in the plan has to be created |
+| `rclone` remotes | `r2:` only — **no crypt remote**, and by decision (2026-10-31) none will be created: the backup is a plain mirror |
 | Resend (monthly reminder option) | Already configured for the health check, `maintenance-setup/secrets.json` |
 | Nearby precedent | Warbler (`~/Warbler`) is the closest template: same stack, same compose shape, same update watcher |
 
