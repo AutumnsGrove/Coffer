@@ -8,7 +8,7 @@
 #
 # Base images are pinned by tag for now. Pin by digest when the publish job is added (Phase 4).
 
-ARG GO_VERSION=1.26
+ARG GO_VERSION=1.27.3
 
 # ---- test -------------------------------------------------------------------------------------
 FROM golang:${GO_VERSION}-bookworm AS test
